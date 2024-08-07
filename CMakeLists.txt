@@ -672,8 +672,12 @@ set_target_properties(
   CXX_STANDARD_REQUIRED YES
   COMPILE_FLAGS "${PKI_CXX_FLAGS}")
 
-add_executable(bssl ${BSSL_SOURCES})
-target_link_libraries(bssl ssl crypto)
+option(BORINGSSL_BUILD_EXE "Build bssl executable" ON)
+
+if(BORINGSSL_BUILD_EXE)
+  add_executable(bssl ${BSSL_SOURCES})
+  target_link_libraries(bssl ssl crypto)
+endif()
 
 # Historically, targets were built in subdirectories. For compatibility with
 # existing tools, we, for now, copy the targets into the subdirectories. This
@@ -681,7 +685,9 @@ target_link_libraries(bssl ssl crypto)
 copy_post_build(crypto crypto crypto_test urandom_test)
 copy_post_build(ssl ssl ssl_test)
 copy_post_build(decrepit decrepit decrepit_test)
-copy_post_build(tool bssl)
+if(BORINGSSL_BUILD_EXE)
+  copy_post_build(tool bssl)
+endif()
 
 if(FUZZ)
   if(LIBFUZZER_FROM_DEPS)
@@ -773,7 +779,9 @@ if(INSTALL_ENABLED)
 
   install(TARGETS crypto ssl
           EXPORT OpenSSLTargets ${INSTALL_DESTINATION_DEFAULT})
-  install(TARGETS bssl DESTINATION ${INSTALL_DESTINATION_DEFAULT})
+  if(BORINGSSL_BUILD_EXE)
+    install(TARGETS bssl DESTINATION ${INSTALL_DESTINATION_DEFAULT})
+  endif()
   install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
   install(EXPORT OpenSSLTargets
           FILE OpenSSLTargets.cmake
